@@ -22,6 +22,7 @@ union  pstate_param {
 
 struct ic_perf_sample {
 	uint64_t aperf, mperf, tsc;
+	uint16_t pstate;
 	double time;
 };
 
@@ -45,5 +46,6 @@ extern uint64_t intercoolr_diff_aperf(struct intercoolr *ic);
 extern uint64_t intercoolr_diff_mperf(struct intercoolr *ic);
 extern uint64_t intercoolr_diff_tsc(struct intercoolr *ic);
 extern double   intercoolr_diff_time(struct intercoolr *ic);
+extern uint16_t intercoolr_last_pstate(struct intercoolr *ic);
 
 #endif

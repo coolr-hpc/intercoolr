@@ -42,31 +42,41 @@ static void measure_sample_latency(struct intercoolr *ic)
 	       tsc_elapsed/(double)niters);
 }
 
-static double fixedwork(struct intercoolr *ic)
+static double busyloop_usec(struct intercoolr *ic, int usec)
 {
 	uint64_t tsc_start;
+	uint64_t ticksperusec = ic->psmax*100;
 
 	intercoolr_sample(ic);
 	tsc_start = rdtsc();
-	while (rdtsc() - tsc_start < ic->psmax * 1000)
+	/* 5 usec busy loop */
+	while (rdtsc() - tsc_start < (ticksperusec*usec))
 		;
 	intercoolr_sample(ic);
-	return intercoolr_diff_aperf(ic) / 
-		intercoolr_diff_time(ic);
+	return intercoolr_diff_time(ic) * 1e6;
 }
 
 static void change_pstate_test(struct intercoolr *ic)
 {
 	int i, j;
+	double time_start, time_elapsed;;
+
 
 	intercoolr_set_pstate(ic, ic->psmin);
 
-	for (i = ic->psmin; i < ic->psmax ; i++) {
-		printf("#request=%d\n", i);
+	for (i = ic->psmin; i <= ic->psmax ; i++) {
+		time_start = gettime();
 		intercoolr_set_pstate(ic, i);
-		for (j= 0; j < 1000 ; j++)
-			printf("%lf\n",  fixedwork(ic));
-		
+		for (j= 0; j < 100 ; j++) {
+			busyloop_usec(ic,5);
+			/* XXX: need to check last N sample points? */
+			if (intercoolr_last_pstate(ic) == i) {
+				break;
+			}
+		}
+		time_elapsed = gettime() - time_start;
+		printf("%d  %lf usec\n", 
+		       i, time_elapsed*1e6);
 	}
 }
 

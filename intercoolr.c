@@ -82,6 +82,7 @@ static int open_amperf_bin(int cpuid)
 
 struct amperf {
 	uint64_t aperf, mperf;
+	uint16_t pstate;
 };
 
 static void read_amperf_bin(int fd, struct amperf *p)
@@ -113,6 +114,7 @@ int intercoolr_sample(struct intercoolr *ic)
 	ic->s[i].aperf = p.aperf;
 	ic->s[i].tsc = rdtsc();
 	ic->s[i].time = t;
+	ic->s[i].pstate = p.pstate;
 
 	if (ic->sidx == 0)
 		ic->sidx = 1;
@@ -125,6 +127,10 @@ int intercoolr_sample(struct intercoolr *ic)
 #define FIRSTIDX(ic)   ((ic->sidx == 0)?0:1)
 #define SECONDIDX(ic)  ((ic->sidx == 0)?1:0)
 
+uint16_t intercoolr_last_pstate(struct intercoolr *ic)
+{
+	return ic->s[SECONDIDX(ic)].pstate;
+}
 
 uint64_t intercoolr_diff_aperf(struct intercoolr *ic)
 {
