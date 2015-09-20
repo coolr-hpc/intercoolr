@@ -41,9 +41,6 @@ extern void intercoolr_fini(struct intercoolr *ic);
 extern int  intercoolr_set_pstate(struct intercoolr *ic, int pstate);
 extern int  intercoolr_sample(struct intercoolr *ic);
 
-extern int pstate_user(int fd, int cmd, void *p);
-
-
 extern uint64_t intercoolr_diff_aperf(struct intercoolr *ic);
 extern uint64_t intercoolr_diff_mperf(struct intercoolr *ic);
 extern uint64_t intercoolr_diff_tsc(struct intercoolr *ic);

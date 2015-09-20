@@ -42,23 +42,31 @@ static void measure_sample_latency(struct intercoolr *ic)
 	       tsc_elapsed/(double)niters);
 }
 
+static double fixedwork(struct intercoolr *ic)
+{
+	uint64_t tsc_start;
+
+	intercoolr_sample(ic);
+	tsc_start = rdtsc();
+	while (rdtsc() - tsc_start < ic->psmax * 1000)
+		;
+	intercoolr_sample(ic);
+	return intercoolr_diff_aperf(ic) / 
+		intercoolr_diff_time(ic);
+}
+
 static void change_pstate_test(struct intercoolr *ic)
 {
-	int i, j, oldps;
+	int i, j;
 
 	intercoolr_set_pstate(ic, ic->psmin);
 
 	for (i = ic->psmin; i < ic->psmax ; i++) {
-		oldps = intercoolr_set_pstate(ic, i);
-		printf("request=%d old=%d\n", i, oldps);
-		for (j = 0; j < 10; j++) {
-			intercoolr_sample(ic);
-			printf("%lu %lu\n", ic->s[0].aperf, ic->s[0].aperf);
-			printf("%lf\n",
-			       intercoolr_diff_time(ic));
-
-		}
-		usleep(200*1000);
+		printf("#request=%d\n", i);
+		intercoolr_set_pstate(ic, i);
+		for (j= 0; j < 1000 ; j++)
+			printf("%lf\n",  fixedwork(ic));
+		
 	}
 }
 
@@ -66,7 +74,6 @@ int main(int argc, char *argv[])
 {
 	struct intercoolr ic;
 	int rc;
-	union  pstate_param p;
 
 	rc = intercoolr_init(&ic, 0);
 	if (rc < 0) {
@@ -74,19 +81,11 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	printf("info: min=%d max=%d turbo=%d\n",
+	printf("# info: min=%d max=%d turbo=%d\n",
 	       ic.psmin, ic.psmax, ic.psturbo);
 
-	pstate_user(ic.fd, PSTATE_INFO, &p);
-	printf("info*: min=%d max=%d turbo=%d\n",
-	       p.info.min, p.info.max, p.info.turbo);
 
-	intercoolr_sample(&ic);
-
-	return 0;
-
-	measure_sample_latency(&ic);
-
+	// measure_sample_latency(&ic);
 	change_pstate_test(&ic);
 
 	intercoolr_fini(&ic);
