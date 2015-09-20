@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "intercoolr.h"
 #include "rdtsc.h"
@@ -53,7 +54,7 @@ int open_pstate_user(void)
 	return fd;
 }
 
-int pstate_user(int fd, int cmd, union pstate_param *p)
+int pstate_user(int fd, int cmd, void *p)
 {
 	int rc;
 
@@ -62,6 +63,32 @@ int pstate_user(int fd, int cmd, union pstate_param *p)
 	return rc;
 }
 
+static int open_amperf_bin(int cpuid)
+{
+	char fn[128];
+	int fd;
+
+	snprintf(fn, sizeof(fn),
+		 "/sys/devices/system/cpu/cpu%d/amperf_bin",
+		 cpuid);
+
+	fd = open(fn, O_RDONLY);
+	if (fd < 0) {
+		perror("open");
+		return -1;
+	}
+	return fd;
+}
+
+struct amperf {
+	uint64_t aperf, mperf;
+};
+
+static void read_amperf_bin(int fd, struct amperf *p)
+{
+	lseek(fd, 0, SEEK_SET);
+	read(fd, p, sizeof(struct amperf));
+}
 
 /* higher-level APIs */
 
@@ -71,65 +98,61 @@ int pstate_user(int fd, int cmd, union pstate_param *p)
 
 int intercoolr_sample(struct intercoolr *ic)
 {
-	int rc, i;
-	union  pstate_param p;
+	int i;
 	struct timeval tv;
 	double t;
+	struct amperf p;
 
 	gettimeofday(&tv, NULL);
 	t = (double)tv.tv_sec + (double)tv.tv_usec * 1e-6;
 
-	rc = pstate_user(ic->fd, PSTATE_PERF, &p);
-	if (rc < 0) 
-		return -1;
-
+	read_amperf_bin(ic->fd_amperf_bin, &p);
 	i = ic->sidx;
 
-	ic->s[i].mperf = p.perf.mperf;
-	ic->s[i].aperf = p.perf.aperf;
+	ic->s[i].mperf = p.mperf;
+	ic->s[i].aperf = p.aperf;
 	ic->s[i].tsc = rdtsc();
 	ic->s[i].time = t;
 
 	if (ic->sidx == 0)
 		ic->sidx = 1;
-	else 
+	else
 		ic->sidx = 0;
 
 	return 0;
 }
 
-#define FIRSTIDX(ic)   (ic->sidx==0?0:1)
-#define SECONDIDX(ic)  (ic->sidx==0?1:0)
+#define FIRSTIDX(ic)   ((ic->sidx == 0)?0:1)
+#define SECONDIDX(ic)  ((ic->sidx == 0)?1:0)
 
 
 uint64_t intercoolr_diff_aperf(struct intercoolr *ic)
 {
-	return 
+	return
 		ic->s[SECONDIDX(ic)].aperf -
 		ic->s[FIRSTIDX(ic)].aperf;
 }
 
 uint64_t intercoolr_diff_mperf(struct intercoolr *ic)
 {
-	return 
+	return
 		ic->s[SECONDIDX(ic)].mperf -
 		ic->s[FIRSTIDX(ic)].mperf;
 }
 
 uint64_t intercoolr_diff_tsc(struct intercoolr *ic)
 {
-	return 
+	return
 		ic->s[SECONDIDX(ic)].tsc -
 		ic->s[FIRSTIDX(ic)].tsc;
 }
 
 double intercoolr_diff_time(struct intercoolr *ic)
 {
-	return 
+	return
 		ic->s[SECONDIDX(ic)].time -
 		ic->s[FIRSTIDX(ic)].time;
 }
-
 
 
 int intercoolr_init(struct intercoolr *ic, int cpuid)
@@ -155,6 +178,10 @@ int intercoolr_init(struct intercoolr *ic, int cpuid)
 		return -1;
 
 
+	ic->fd_amperf_bin = open_amperf_bin(ic->cpuid);
+	if (ic->fd_amperf_bin < 0)
+		return -1;
+
 	rc = pstate_user(ic->fd, PSTATE_INFO, &p);
 	if (rc < 0)
 		goto out;
@@ -174,12 +201,12 @@ int intercoolr_init(struct intercoolr *ic, int cpuid)
 	if (rc < 0)
 		goto out;
 
+	pstate_user(ic->fd, PSTATE_DEBUG, &p);
 
 	return 0;
  out:
 	close(ic->fd);
 	return -1;
-	
 }
 
 void intercoolr_fini(struct intercoolr *ic)

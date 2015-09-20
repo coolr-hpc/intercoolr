@@ -8,20 +8,16 @@
 enum {
 	PSTATE_INFO = 0,
 	PSTATE_SET,
-	PSTATE_PERF,
 	PSTATE_DEBUG,
 };
 
 union  pstate_param {
 	struct _info {
-		uint16_t min, max, turbo;
+		uint16_t min, max, turbo, scaling;
 	} info;
 	struct _set {
 		uint16_t request, old;
 	} set;
-	struct _perf {
-		uint64_t aperf, mperf;
-	} perf;
 };
 
 struct ic_perf_sample {
@@ -31,7 +27,8 @@ struct ic_perf_sample {
 
 struct intercoolr {
 	int cpuid;
-	int fd;
+	int fd; /* /dev/pstate_user */
+	int fd_amperf_bin; /* per-cpu amperf_bin */
 
 	int psmin, psmax, psturbo;
 
@@ -43,6 +40,9 @@ extern int  intercoolr_init(struct intercoolr *ic, int cpuid);
 extern void intercoolr_fini(struct intercoolr *ic);
 extern int  intercoolr_set_pstate(struct intercoolr *ic, int pstate);
 extern int  intercoolr_sample(struct intercoolr *ic);
+
+extern int pstate_user(int fd, int cmd, void *p);
+
 
 extern uint64_t intercoolr_diff_aperf(struct intercoolr *ic);
 extern uint64_t intercoolr_diff_mperf(struct intercoolr *ic);

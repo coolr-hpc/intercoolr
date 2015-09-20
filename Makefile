@@ -5,6 +5,8 @@ CFLAGS=-O2 -Wall -g
 
 all: $(TARGETS)
 
+intercoolr.o : intercoolr.c
+
 libintercoolr.a : intercoolr.o
 	$(AR) cq $@ $^
 
