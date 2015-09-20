@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	       ic.psmin, ic.psmax, ic.psturbo);
 
 
-	// measure_sample_latency(&ic);
+	measure_sample_latency(&ic);
 	change_pstate_test(&ic);
 
 	intercoolr_fini(&ic);
