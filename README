@@ -1,0 +1,10 @@
+
+'intercoolr' is a collection of APIs that allow userspace codes to
+directly monitor and control hardware features such as P-state.
+
+Currently this code only supports Intel Sandy Bridge or later
+processors.
+
+Development status: prototyping
+
+
