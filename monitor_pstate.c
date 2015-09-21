@@ -17,16 +17,16 @@
 
 int main(int argc, char *argv[])
 {
-	int *pstate;
+	struct ic_perf_sample *perfdiff;
+
 	int nthreads;
 	int interval_usec = 500 * 1000;
 
 	nthreads = omp_get_max_threads();
-	pstate = (int *)malloc(sizeof(int)*nthreads);
-
+	perfdiff = (struct ic_perf_sample *)malloc(sizeof(struct ic_perf_sample)*nthreads);
 
 	
-#pragma omp parallel shared(pstate)
+#pragma omp parallel shared(perfdiff)
 	{
 		int rc, i;
 		int tid;
@@ -44,11 +44,18 @@ int main(int argc, char *argv[])
 		while (1) {
 			intercoolr_sample(&ic);
 
-			pstate[tid] = intercoolr_last_pstate(&ic);
+			perfdiff[tid].aperf = intercoolr_diff_aperf(&ic);
+			perfdiff[tid].mperf = intercoolr_diff_mperf(&ic);
+			perfdiff[tid].tsc = intercoolr_diff_tsc(&ic);
+			perfdiff[tid].time  = intercoolr_diff_time(&ic);
+			perfdiff[tid].pstate = intercoolr_last_pstate(&ic);
+
 #pragma omp barrier
 			if (tid == 0) {
 				for (i = 0; i < nths; i++)
-					printf("%2d ", pstate[i]);
+					printf("%.2lf ",
+					       (double)perfdiff[i].aperf/
+					       perfdiff[i].time * 1e-9);
 				printf("\n");
 			}
 			usleep(interval_usec);
