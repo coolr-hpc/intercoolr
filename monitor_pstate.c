@@ -18,9 +18,14 @@
 int main(int argc, char *argv[])
 {
 	struct ic_perf_sample *perfdiff;
-
 	int nthreads;
 	int interval_usec = 500 * 1000;
+	int loop = 0;
+
+	if (argc >= 2) {
+		/* XXX: add option for this */
+		loop = 1;
+	}
 
 	nthreads = omp_get_max_threads();
 	perfdiff = (struct ic_perf_sample *)malloc(sizeof(struct ic_perf_sample)*nthreads);
@@ -41,7 +46,7 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		while (1) {
+		for (;;) {
 			intercoolr_sample(&ic);
 
 			perfdiff[tid].aperf = intercoolr_diff_aperf(&ic);
@@ -58,6 +63,8 @@ int main(int argc, char *argv[])
 					       perfdiff[i].time * 1e-9);
 				printf("\n");
 			}
+			if (!loop)
+				break;
 			usleep(interval_usec);
 		}
 		
