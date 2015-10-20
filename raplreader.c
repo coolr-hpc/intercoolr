@@ -127,7 +127,7 @@ int raplreader_init(struct raplreader *rr)
 
 		val = read_uint64(p);
 		if (raplreader_debug) {
-			printf("socket%d max_energy_range_uj %lu\n",
+			printf("%d socket max_energy_range_uj %lu\n",
 			       i, val);
 		}
 		rr->socket_max[i] = val;
@@ -150,9 +150,23 @@ int raplreader_init(struct raplreader *rr)
 		if (!p)
 			break;
 		rr->sysfs_dram_max[i] = p;
+
+		val = read_uint64(p);
+		if (raplreader_debug) {
+			printf("%d dram   max_energy_range_uj %lu\n",
+			       i, val);
+		}
+		rr->dram_max[i] = val;
+
 	}
+	if (i == 0)
+		return -1;
 
 	rr->nsockets = i;
+
+	if (raplreader_debug) {
+		printf("nsockets=%d\n", rr->nsockets);
+	}
 
 	return 0;
 }
@@ -212,8 +226,6 @@ int main()
 
 	rc = raplreader_init(&rr);
 	assert(rc == 0);
-
-	printf("nsockets: %d\n", rr.nsockets);
 
 	return 0;
 }
