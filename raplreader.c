@@ -138,7 +138,7 @@ int raplreader_init(struct raplreader *rr)
 		if (read_str(p, tmp) <= 0)
 			continue;
 		free(p);
-		if (strcmp(tmp, "dram") != 0)
+		if (strncmp(tmp, "dram", 4) != 0)
 			continue;
 
 		p = getpath_sysfs_sub(i, 0, "energy_uj");
