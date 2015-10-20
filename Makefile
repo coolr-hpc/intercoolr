@@ -1,4 +1,4 @@
-TARGETS=measure_pstate_latency set_pstate monitor_pstate
+TARGETS=measure_pstate_latency set_pstate monitor_pstate raplreader_test
 
 CC=gcc
 CFLAGS=-O2 -Wall -g -fopenmp
@@ -21,8 +21,11 @@ set_pstate : set_pstate.c libintercoolr.a
 monitor_pstate : monitor_pstate.c libintercoolr.a
 	$(CC) -o $@ $(CFLAGS) $< -L. -lintercoolr $(LDFLAGS)
 
+raplreader_test: raplreader.c
+	$(CC) -o $@ $(CFLAGS) -D__TEST_MAIN__ $< 
 
 clean:
 	rm -f $(TARGETS)
 	rm -f *.o *.a
 	rm -f *~
+
