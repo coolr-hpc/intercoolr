@@ -8,7 +8,7 @@ all: $(TARGETS)
 
 intercoolr.o : intercoolr.c intercoolr.h
 
-libintercoolr.a : intercoolr.o
+libintercoolr.a : intercoolr.o raplreader.o
 	$(RM) $@
 	$(AR) cq $@ $^
 
