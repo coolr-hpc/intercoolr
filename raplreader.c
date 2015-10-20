@@ -3,6 +3,10 @@
  *
  * This code requires the intel_rapl driver
  *
+ * Limitation: if the time interval between two samples() is too long;
+ * the counter wraps around twice or more, the energy diff becomes
+ * incorrect.
+ *
  * Kaz Yoshii <ky@anl.gov>
  */
 #include <stdio.h>
@@ -40,7 +44,7 @@ static uint64_t read_uint64(const char *fn)
 
 	fp = fopen(fn, "r");
 	if (!fp) {
-		perror("open");
+		printf("read_uint64 open: %s\n",fn);
 		return -1;
 	}
 	fgets(buf, sizeof(buf), fp);
@@ -57,7 +61,7 @@ static int read_str(const char *fn, char *buf)
 
 	fp = fopen(fn, "r");
 	if (!fp) {
-		perror("open");
+		printf("read_str open: %s\n",fn);
 		return -1;
 	}
 	fgets(buf, sizeof(buf), fp);
@@ -141,6 +145,8 @@ int raplreader_init(struct raplreader *rr)
 		if (strncmp(tmp, "dram", 4) != 0)
 			continue;
 
+		rr->dram_available = 1;
+
 		p = getpath_sysfs_sub(i, 0, "energy_uj");
 		if (!p)
 			break;
@@ -168,50 +174,84 @@ int raplreader_init(struct raplreader *rr)
 		printf("nsockets=%d\n", rr->nsockets);
 	}
 
+	raplreader_sample(rr); /* sample once here. then the next sample can yield correct diff */
+	usleep(10000);
+
 	return 0;
 }
 
-#if 0
+static uint64_t delta_energy(uint64_t cur_e, uint64_t prev_e, uint64_t max_e)
+{
+	if (cur_e >= prev_e)
+		return cur_e - prev_e;
+
+	return cur_e + max_e - prev_e;
+}
+
 int raplreader_sample(struct raplreader *rr)
 {
-	int i;
-}
+	int i, idx, previdx;
+	uint64_t val;
+	double total_p;
+	double t;
+
+	idx = rr->idx;
+	if (idx == 0)
+		previdx = 1;
+	else
+		previdx = 0;
+
+	total_p = 0.0;
+	for (i = 0; i < rr->nsockets; i++) {
+		t = gettimesec();
+		val = read_uint64(rr->sysfs_socket[i]);
+		rr->socket[i].e[idx] = val;
+		rr->socket[i].t[idx] = t;
+
+		/* calculate delta */
+		rr->delta_socket[i] = delta_energy(val,
+						   rr->socket[i].e[previdx],
+						   rr->socket_max[i]);
+		rr->delta_t[i]      = t - rr->socket[i].t[previdx];
 
 
-
-void read_rapl(struct raplsample *rs)
-{
-        rs->e[0] = read_uint64( RAPLBASEPATH "intel-rapl:0/energy_uj" );
-	rs->e[1] = read_uint64( RAPLBASEPATH "intel-rapl:1/energy_uj" );
-	rs->t = gettimesec();
-}
-
-
-uint64_t read_rapl_maxenergy()
-{
-	char *fn =  RAPLBASEPATH "intel-rapl:0/max_energy_range_uj";
-
-	if (maxenergy > 0) return maxenergy;
-	maxenergy = read_uint64(fn);
-	return maxenergy;
-}
-
-void diff_energy(struct raplsample *rs1, struct raplsample *rs2, double *e)
-{
-	uint64_t maxrange = read_rapl_maxenergy();
-	uint64_t ediff;
-	int i;
-
-	for (i = 0; i < 2; i++ ) {
-		if (rs2->e[i] >= rs1->e[i]) {
-			ediff = rs2->e[i] - rs1->e[i];
-		} else {
-			ediff = maxrange - rs1->e[i] + rs2->e[i];
+		if (rr->delta_t[i] > 0.0) {
+			rr->power_socket[i] = (double)rr->delta_socket[i] * 1e-6;
+			rr->power_socket[i] /= rr->delta_t[i];
+			total_p += rr->power_socket[i];
 		}
-                e[i] = (double)ediff/1000.0/1000.0;
+		
+		if (rr->dram_available) {
+
+			val = read_uint64(rr->sysfs_dram[i]);
+
+
+			rr->dram[i].e[idx] = val;
+			rr->dram[i].t[idx] = t;
+
+			rr->delta_dram[i] = delta_energy(val,
+							 rr->dram[i].e[previdx], 
+							 rr->dram_max[i]);
+
+			if (rr->delta_t[i] > 0.0) {
+				rr->power_dram[i] = (double)rr->delta_dram[i] * 1e-6;
+				rr->power_dram[i] /= rr->delta_t[i];
+				total_p += rr->power_dram[i];
+			}
+		}
 	}
+	rr->power_total = total_p;
+
+	if (rr->idx == 0)
+		rr->idx = 1;
+	else
+		rr->idx = 0;
+
+	return 0;
 }
-#endif
+
+
+
 
 #ifdef __TEST_MAIN__
 
@@ -220,12 +260,29 @@ void diff_energy(struct raplsample *rs1, struct raplsample *rs2, double *e)
 int main()
 {
 	struct raplreader rr;
+	int i, j, n;
 	int rc;
 
 	raplreader_debug ++;
 
 	rc = raplreader_init(&rr);
 	assert(rc == 0);
+
+	n = rr.nsockets;
+
+	for (i = 0; i < 10; i++) {
+		raplreader_sample(&rr);
+
+		printf("total=%lf ", rr.power_total);
+		for (j = 0; j < n; j++) {
+			printf("socket%d=%lf ", j, rr.power_socket[j]);
+			if (rr.dram_available)
+				printf("dram%d=%lf ", j, rr.power_dram[j]);
+		}
+		printf("\n");
+
+		sleep(1);
+	}
 
 	return 0;
 }
