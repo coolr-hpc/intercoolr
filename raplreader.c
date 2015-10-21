@@ -192,7 +192,7 @@ int raplreader_sample(struct raplreader *rr)
 {
 	int i, idx, previdx;
 	uint64_t val;
-	double total_p;
+	double total_p, energy_p;
 	double t;
 
 	idx = rr->idx;
@@ -201,7 +201,7 @@ int raplreader_sample(struct raplreader *rr)
 	else
 		previdx = 0;
 
-	total_p = 0.0;
+	energy_p = total_p = 0.0;
 	for (i = 0; i < rr->nsockets; i++) {
 		t = gettimesec();
 		val = read_uint64(rr->sysfs_socket[i]);
@@ -218,6 +218,7 @@ int raplreader_sample(struct raplreader *rr)
 		if (rr->delta_t[i] > 0.0) {
 			rr->power_socket[i] = (double)rr->delta_socket[i] * 1e-6;
 			rr->power_socket[i] /= rr->delta_t[i];
+			energy_p += (double)rr->delta_socket[i] * 1e-6;
 			total_p += rr->power_socket[i];
 		}
 		
@@ -236,11 +237,13 @@ int raplreader_sample(struct raplreader *rr)
 			if (rr->delta_t[i] > 0.0) {
 				rr->power_dram[i] = (double)rr->delta_dram[i] * 1e-6;
 				rr->power_dram[i] /= rr->delta_t[i];
+				energy_p += (double)rr->power_dram[i] * 1e-6;
 				total_p += rr->power_dram[i];
 			}
 		}
 	}
 	rr->power_total = total_p;
+	rr->energy_total = energy_p;
 
 	if (rr->idx == 0)
 		rr->idx = 1;
@@ -270,10 +273,12 @@ int main()
 
 	n = rr.nsockets;
 
+	raplreader_sample(&rr);
+	sleep(1);
 	for (i = 0; i < 10; i++) {
 		raplreader_sample(&rr);
 
-		printf("total=%lf ", rr.power_total);
+		printf("total: %lf [W]  %lf [J] ", rr.power_total, rr.energy_total);
 		for (j = 0; j < n; j++) {
 			printf("socket%d=%lf ", j, rr.power_socket[j]);
 			if (rr.dram_available)

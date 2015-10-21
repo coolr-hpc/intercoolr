@@ -37,6 +37,7 @@ struct raplreader {	int nsockets;
 	uint64_t delta_socket[RAPLREADER_MAXSOCKETS]; /* uj */
 	uint64_t delta_dram[RAPLREADER_MAXSOCKETS]; /* uj */
 	double   delta_t[RAPLREADER_MAXSOCKETS]; /* sec */
+	double  energy_total; /* J */
 
 	double  power_socket[RAPLREADER_MAXSOCKETS]; /* W */
 	double  power_dram[RAPLREADER_MAXSOCKETS]; /* W */
