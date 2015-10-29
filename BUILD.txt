@@ -1,0 +1,13 @@
+
+"intercoolr" requires the "coolrfreq" kernel driver.
+
+Here is an instruction to build and test it
+
+$ git clone https://github.com/coolr-hpc/turbofreq.git && cd turbofreq
+$ make
+$ sudo insmod ./coolrfreq.ko
+$ cd ..
+$ git clone https://github.com/coolr-hpc/intercoolr.git && cd intercoolr
+$ make
+$ sudo ./fixup.sh
+$ ./set_pstate 13 2  # set 13 to core2
