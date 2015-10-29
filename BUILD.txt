@@ -10,4 +10,12 @@ $ cd ..
 $ git clone https://github.com/coolr-hpc/intercoolr.git && cd intercoolr
 $ make
 $ sudo ./fixup.sh
-$ ./set_pstate 13 2  # set 13 to core2
+
+$ ./get_pstate
+pmin=12 pmax=23 pturbo=36
+
+# set the lowest pstate to all cores
+$ ./set_pstate 12
+
+# set the turboboot to core2
+$ ./set_pstate 36  2
