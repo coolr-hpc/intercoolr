@@ -28,6 +28,9 @@ monitor_pstate : monitor_pstate.c libintercoolr.a
 raplreader_test: raplreader.c
 	$(CC) -o $@ $(CFLAGS) -D__TEST_MAIN__ $< 
 
+etrace2: etrace2.c raplreader.c
+	$(CC) -o $@ $(CFLAGS) $< 
+
 clean:
 	rm -f $(TARGETS)
 	rm -f *.o *.a

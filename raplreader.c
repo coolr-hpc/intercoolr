@@ -253,9 +253,6 @@ int raplreader_sample(struct raplreader *rr)
 	return 0;
 }
 
-
-
-
 #ifdef __TEST_MAIN__
 
 #include <assert.h>
@@ -265,6 +262,8 @@ int main()
 	struct raplreader rr;
 	int i, j, n;
 	int rc;
+	double acc_energy = 0.0; /* accumulated energy */
+	double acc_time = 0.0;
 
 	raplreader_debug ++;
 
@@ -277,8 +276,12 @@ int main()
 	sleep(1);
 	for (i = 0; i < 10; i++) {
 		raplreader_sample(&rr);
+		acc_energy += rr.energy_total;
+		acc_time += rr.delta_t[0];
 
-		printf("total: %lf [W]  %lf [J] ", rr.power_total, rr.energy_total);
+		printf("acc.: %7.2lf [J] %5.1lf [S]  sample: %lf [W]  %lf [J] ",
+		       acc_energy, acc_time, 
+		       rr.power_total, rr.energy_total);
 		for (j = 0; j < n; j++) {
 			printf("socket%d=%lf ", j, rr.power_socket[j]);
 			if (rr.dram_available)

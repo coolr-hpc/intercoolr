@@ -17,7 +17,8 @@ struct raplsample {
 	double t[2]; /* sec */
 };
 
-struct raplreader {	int nsockets;
+struct raplreader {
+	int nsockets;
 
 	char *sysfs_socket[RAPLREADER_MAXSOCKETS];
 	char *sysfs_dram[RAPLREADER_MAXSOCKETS];
