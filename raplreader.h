@@ -16,6 +16,12 @@ struct raplsample {
 	uint64_t e[2]; /* uj */
 	double t[2]; /* sec */
 };
+/*
+  NOTE: all values are sampled at almost the same time.  (the latency
+  is one read syscall plus some function overhead) maybe we can just
+  move out 't[2]' from struct raplsample and add them as a member of
+  raplreader.
+*/
 
 struct raplreader {
 	int nsockets;
@@ -49,5 +55,68 @@ struct raplreader {
 extern int raplreader_init(struct raplreader *rr);
 
 extern int raplreader_sample(struct raplreader *rr);
+
+
+static inline double raplreader_get_power_socket(struct raplreader *rr, int n)
+{
+	if (!rr) return -1.0;
+	return rr->power_socket[n];
+}
+
+static inline double raplreader_get_power_dram(struct raplreader *rr, int n)
+{
+	if (!rr) return -1.0;
+	return rr->power_dram[n];
+}
+
+static inline double raplreader_get_total_power(struct raplreader *rr)
+{
+	if (!rr) return -1.0;
+	return rr->power_total;
+}
+
+static inline double raplreader_get_total_energy(struct raplreader *rr)
+{
+	if (!rr) return -1.0;
+	return rr->energy_total;
+}
+
+
+static inline int raplreader_is_dram_available(struct raplreader *rr)
+{
+	if (!rr) return 0;
+
+	return rr->dram_available;
+}
+
+static inline int raplreader_get_nsockets(struct raplreader *rr)
+{
+	if (rr) {
+		return rr->nsockets;
+	}
+	return -1;
+}
+
+static inline double raplreader_get_ts(struct raplreader *rr)
+{
+	if (rr) {
+		if (rr->idx == 0)
+			return rr->socket[0].t[1];
+		else
+			return rr->socket[0].t[0];
+	}
+	return 0.0;
+}
+
+static inline double raplreader_get_ts2(struct raplreader *rr)
+{
+	if (rr) {
+		if (rr->idx == 0)
+			return rr->socket[0].t[1];
+		else
+			return rr->socket[0].t[0];
+	}
+	return 0.0;
+}
 
 #endif
