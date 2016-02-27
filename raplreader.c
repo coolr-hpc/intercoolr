@@ -124,6 +124,7 @@ int raplreader_init(struct raplreader *rr)
 	char tmp[BUFSIZ];
 	int i;
 	uint64_t val;
+	int subn;
 
 	memset(rr, 0, sizeof(struct raplreader));
 	
@@ -148,21 +149,23 @@ int raplreader_init(struct raplreader *rr)
 			
 
 		/* find dram entries */
-		p = getpath_sysfs_sub(i, 0, "name");
+		subn = 1;
+		p = getpath_sysfs_sub(i, subn, "name");
 		if (read_str(p, tmp) <= 0)
 			continue;
 		free(p);
+
 		if (strncmp(tmp, "dram", 4) != 0)
 			continue;
 
 		rr->dram_available = 1;
 
-		p = getpath_sysfs_sub(i, 0, "energy_uj");
+		p = getpath_sysfs_sub(i, subn, "energy_uj");
 		if (!p)
 			break;
 		rr->sysfs_dram[i] = p;
 
-		p = getpath_sysfs_sub(i, 0, "max_energy_range_uj");
+		p = getpath_sysfs_sub(i, subn, "max_energy_range_uj");
 		if (!p)
 			break;
 		rr->sysfs_dram_max[i] = p;
