@@ -151,7 +151,7 @@ static void  sampling_loop(FILE *fp, double interval, double timeout, int child_
 				fprintf(fp, "%.3lf  ", ts);
 
 			fprintf(fp, "%.3lf  ", raplreader_get_total_power(&rr));
-			fprintf(fp, "%.3lf  ", raplreader_get_total_energy(&rr));
+			fprintf(fp, "%.3lf  ", raplreader_get_energy(&rr));
 			fprintf(fp, "\n");
 			fflush(fp);
 		}
