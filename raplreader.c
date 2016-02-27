@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -22,6 +23,7 @@ static int raplreader_debug = 0;
 
 #define RAPLBASEPATH "/sys/devices/virtual/powercap/intel-rapl/"
 
+#if 0
 static clockid_t clk_id = CLOCK_MONOTONIC_RAW;
 
 static double gettimesec(void)
@@ -33,6 +35,14 @@ static double gettimesec(void)
 		ret = (double)tp.tv_sec + (double)tp.tv_nsec/1000.0/1000.0/1000.0;
 	}
 	return ret;
+}
+#endif
+
+static double gettimesec(void)
+{
+	struct timeval tv;
+	gettimeofday(&tv, 0);
+	return (double)tv.tv_sec + (double)tv.tv_usec/1000.0/1000.0;
 }
 
 
