@@ -44,7 +44,9 @@ struct raplreader {
 	double   delta_t[RAPLREADER_MAXSOCKETS]; /* sec */
 	uint64_t delta_socket[RAPLREADER_MAXSOCKETS]; /* uj */
 	uint64_t delta_dram[RAPLREADER_MAXSOCKETS]; /* uj */
-	double  energy_total; /* J */
+	double   energy_socket[RAPLREADER_MAXSOCKETS]; /* uj */
+	double   energy_dram[RAPLREADER_MAXSOCKETS]; /* uj */
+	double   energy_total; /* J */
 
 	double  power_socket[RAPLREADER_MAXSOCKETS]; /* W */
 	double  power_dram[RAPLREADER_MAXSOCKETS]; /* W */
@@ -67,6 +69,18 @@ static inline double raplreader_get_power_dram(struct raplreader *rr, int n)
 {
 	if (!rr) return -1.0;
 	return rr->power_dram[n];
+}
+
+static inline double raplreader_get_energy_socket(struct raplreader *rr, int n)
+{
+	if (!rr) return -1.0;
+	return rr->energy_socket[n];
+}
+
+static inline double raplreader_get_energy_dram(struct raplreader *rr, int n)
+{
+	if (!rr) return -1.0;
+	return rr->energy_dram[n];
 }
 
 static inline double raplreader_get_total_power(struct raplreader *rr)

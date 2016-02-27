@@ -221,18 +221,22 @@ int raplreader_sample(struct raplreader *rr)
 
 		/* calculate delta */
 		if (firstsample) {
-			rr->delta_socket[i] = 0.0;
 			rr->delta_t[i]      = 0.0;
+			rr->delta_socket[i] = 0.0;
+			rr->energy_socket[i] = 0.0;
 		} else {
+			rr->delta_t[i]      = t - rr->socket[i].t[previdx];
+
 			rr->delta_socket[i] = delta_energy(val,
 							   rr->socket[i].e[previdx],
 							   rr->socket_max[i]);
-			rr->delta_t[i]      = t - rr->socket[i].t[previdx];
+
 		}
 
 		if (rr->delta_t[i] > 0.0) {
 			rr->power_socket[i] = (double)rr->delta_socket[i] * 1e-6;
 			rr->power_socket[i] /= rr->delta_t[i];
+			rr->energy_socket[i] += (double)rr->delta_socket[i] * 1e-6;
 			total_e += (double)rr->delta_socket[i] * 1e-6;
 			total_p += rr->power_socket[i];
 		}
@@ -246,6 +250,7 @@ int raplreader_sample(struct raplreader *rr)
 
 			if (firstsample) {
 				rr->delta_dram[i] = 0.0;
+				rr->energy_dram[i] = 0.0;
 			} else {
 				rr->delta_dram[i] = delta_energy(val,
 								 rr->dram[i].e[previdx], 
@@ -255,6 +260,7 @@ int raplreader_sample(struct raplreader *rr)
 			if (rr->delta_t[i] > 0.0) {
 				rr->power_dram[i] = (double)rr->delta_dram[i] * 1e-6;
 				rr->power_dram[i] /= rr->delta_t[i];
+				rr->energy_dram[i] += (double)rr->delta_dram[i] * 1e-6;
 				total_e += (double)rr->power_dram[i] * 1e-6;
 				total_p += rr->power_dram[i];
 			}

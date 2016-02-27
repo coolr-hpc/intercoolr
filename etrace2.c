@@ -83,6 +83,7 @@ static void  sampling_loop(FILE *fp, double interval, double timeout, int child_
 	int status;
 	int nsockets;
 	int rc;
+	int i;
 
 	fprintf(fp, "# ETRACE2_VERSION=%s\n",ETRACE2_VERSION);
 
@@ -155,6 +156,17 @@ static void  sampling_loop(FILE *fp, double interval, double timeout, int child_
 			fprintf(fp, "\n");
 			fflush(fp);
 		}
+	}
+
+	raplreader_sample(&rr);
+	ts = raplreader_get_ts(&rr);
+
+	fprintf(fp, "# ELAPSED=%lf\n", ts - time_start);
+	fprintf(fp, "# ENERGY=%lf\n", raplreader_get_total_energy(&rr));
+	for (i = 0; i < raplreader_get_nsockets(&rr); i++) {
+		fprintf(fp, "# ENERGY_SOCKET%d=%lf\n", i, raplreader_get_energy_socket(&rr,i));
+		if (raplreader_is_dram_available(&rr))
+			fprintf(fp, "# ENERGY_DRAM%d=%lf\n", i, raplreader_get_energy_dram(&rr,i));
 	}
 }
 
