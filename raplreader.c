@@ -264,8 +264,8 @@ int raplreader_sample(struct raplreader *rr)
 				rr->power_dram[i] = (double)rr->delta_dram[i] * 1e-6;
 				rr->power_dram[i] /= rr->delta_t[i];
 				rr->energy_dram[i] += (double)rr->delta_dram[i] * 1e-6;
-				total_e += (double)rr->power_dram[i] * 1e-6;
 				total_p += rr->power_dram[i];
+				total_e += (double)rr->delta_dram[i] * 1e-6;
 			}
 		}
 	}
