@@ -83,7 +83,6 @@ static void  sampling_loop(FILE *fp, double interval, double timeout, int child_
 	struct raplreader rr;
 	useconds_t usec;
 	int status;
-	int nsockets;
 	int rc;
 	int i;
 
@@ -108,8 +107,6 @@ static void  sampling_loop(FILE *fp, double interval, double timeout, int child_
 		fprintf(stderr, "Error: raplreader_init() failed\n");
 		exit(1);
 	}
-
-	nsockets = raplreader_get_nsockets(&rr);
 
 	raplreader_sample(&rr);
 	ts = raplreader_get_ts(&rr);
