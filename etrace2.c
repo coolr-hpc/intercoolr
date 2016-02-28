@@ -38,6 +38,7 @@ char *_basename(char *path)
 	return base ? base+1 : path;
 }
 
+#if 0
 /*
   XXX: clean up this later
 */
@@ -64,6 +65,7 @@ static void sigh(int signum)
 	unlink(LOCKFN);
 	exit(1);
 }
+#endif
 
 static double gettimesec(void)
 {
@@ -87,6 +89,7 @@ static void  sampling_loop(FILE *fp, double interval, double timeout, int child_
 
 	fprintf(fp, "# ETRACE2_VERSION=%s\n",ETRACE2_VERSION);
 
+#if 0
 	rc = access_lock();
 	if( rc == 0 ) {
 		fprintf(stderr, "\n");
@@ -96,9 +99,9 @@ static void  sampling_loop(FILE *fp, double interval, double timeout, int child_
 		fprintf(stderr, "\n");
 		exit(1);
 	}
-
 	touch_lock();
 	signal(SIGINT, sigh);
+#endif
 
 	rc = raplreader_init(&rr);
 	if (rc) {
@@ -294,7 +297,9 @@ int main(int argc, char *argv[])
 		fclose(fp);
 	}
 
+#if 0
 	unlink_lock();
+#endif
 
 	return 0;
 }
