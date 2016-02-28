@@ -149,33 +149,37 @@ int raplreader_init(struct raplreader *rr)
 			
 
 		/* find dram entries */
-		subn = 1;
-		p = getpath_sysfs_sub(i, subn, "name");
-		if (read_str(p, tmp) <= 0)
-			continue;
-		free(p);
-
-		if (strncmp(tmp, "dram", 4) != 0)
-			continue;
-
-		rr->dram_available = 1;
-
-		p = getpath_sysfs_sub(i, subn, "energy_uj");
-		if (!p)
-			break;
-		rr->sysfs_dram[i] = p;
-
-		p = getpath_sysfs_sub(i, subn, "max_energy_range_uj");
-		if (!p)
-			break;
-		rr->sysfs_dram_max[i] = p;
-
-		val = read_uint64(p);
-		if (raplreader_debug) {
-			printf("%d dram   max_energy_range_uj %lu\n",
-			       i, val);
+		for (subn = 0; subn < 4; subn++) {
+			p = getpath_sysfs_sub(i, subn, "name");
+			if (!p)
+				break;
+			if (read_str(p, tmp) <= 0)
+				continue;
+			free(p);
+			if (strncmp(tmp, "dram", 4) == 0) {
+				rr->dram_available = 1;
+				break;
+			}
 		}
-		rr->dram_max[i] = val;
+		
+		if (rr->dram_available) {
+			p = getpath_sysfs_sub(i, subn, "energy_uj");
+			if (!p)
+				break;
+			rr->sysfs_dram[i] = p;
+
+			p = getpath_sysfs_sub(i, subn, "max_energy_range_uj");
+			if (!p)
+				break;
+			rr->sysfs_dram_max[i] = p;
+
+			val = read_uint64(p);
+			if (raplreader_debug) {
+				printf("%d dram   max_energy_range_uj %lu\n",
+					i, val);
+			}
+			rr->dram_max[i] = val;
+		}
 
 	}
 	if (i == 0)
