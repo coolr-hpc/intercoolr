@@ -274,7 +274,7 @@ int raplreader_sample(struct raplreader *rr)
 		}
 	}
 	rr->power_total = total_p;
-	rr->energy_total += total_e;
+	rr->energy_total = total_e;
 
 	if (rr->idx == 0)
 		rr->idx = 1;
