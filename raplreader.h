@@ -61,37 +61,37 @@ extern int raplreader_sample(struct raplreader *rr);
 
 static inline double raplreader_get_power_socket(struct raplreader *rr, int n)
 {
-	if (!rr) return -1.0;
+	if (!rr) return 0.0;
 	return rr->power_socket[n];
 }
 
 static inline double raplreader_get_power_dram(struct raplreader *rr, int n)
 {
-	if (!rr) return -1.0;
+	if (!rr) return 0.0;
 	return rr->power_dram[n];
 }
 
 static inline double raplreader_get_energy_socket(struct raplreader *rr, int n)
 {
-	if (!rr) return -1.0;
+	if (!rr) return 0.0;
 	return rr->energy_socket[n];
 }
 
 static inline double raplreader_get_energy_dram(struct raplreader *rr, int n)
 {
-	if (!rr) return -1.0;
+	if (!rr) return 0.0;
 	return rr->energy_dram[n];
 }
 
 static inline double raplreader_get_total_power(struct raplreader *rr)
 {
-	if (!rr) return -1.0;
+	if (!rr) return 0.0;
 	return rr->power_total;
 }
 
 static inline double raplreader_get_total_energy(struct raplreader *rr)
 {
-	if (!rr) return -1.0;
+	if (!rr) return 0.0;
 	return rr->energy_total;
 }
 
